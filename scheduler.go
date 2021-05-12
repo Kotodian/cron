@@ -92,7 +92,48 @@ func (s *Scheduler) RunAllWithDelay(d int) {
 }
 
 func (s *Scheduler) Remove(j interface{}) {
+	s.removeByCondition(func(job *Job) bool {
+		return job.jobFunc == getFunctionName(j)
+	})
+}
 
+func (s *Scheduler) RemoveByRef(j *Job) {
+	s.removeByCondition(func(job *Job) bool {
+		return job == j
+	})
+}
+
+func (s *Scheduler) Scheduled(j interface{}) bool {
+	for _, job := range s.jobs {
+		if job.jobFunc == getFunctionName(j) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Scheduler) Start() chan bool {
+	stopped := make(chan bool, 1)
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				s.RunPending()
+			case <-stopped:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return stopped
+}
+
+func (s *Scheduler) Clear() {
+	for i := 0; i < s.size; i++ {
+		s.jobs[i] = nil
+	}
+	s.size = 0
 }
 
 func (s *Scheduler) removeByCondition(shouldRemove func(*Job) bool) {
@@ -118,4 +159,8 @@ func (s *Scheduler) removeByCondition(shouldRemove func(*Job) bool) {
 		s.size--
 		s.jobs[s.size] = nil
 	}
+}
+
+func Every(interval uint64) *Job {
+	return defaultScheduler.Every(interval)
 }

@@ -3,10 +3,12 @@ package cron
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/go-redis/redis"
 	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type timeUnit int
@@ -27,6 +29,25 @@ type Locker interface {
 var (
 	locker Locker
 )
+
+type redisLocker struct {
+	cache *redis.Client
+}
+
+func NewRedisLocker(cache *redis.Client) Locker {
+	return &redisLocker{cache: cache}
+}
+func (s *redisLocker) Lock(key string) (success bool, err error) {
+	res, err := s.cache.SetNX(key, time.Now().String(), time.Second*15).Result()
+	if err != nil {
+		return false, err
+	}
+	return res, nil
+}
+
+func (s *redisLocker) Unlock(key string) error {
+	return s.cache.Del(key).Err()
+}
 
 func SetLocker(l Locker) {
 	locker = l
