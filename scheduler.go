@@ -164,3 +164,24 @@ func (s *Scheduler) removeByCondition(shouldRemove func(*Job) bool) {
 func Every(interval uint64) *Job {
 	return defaultScheduler.Every(interval)
 }
+
+func Start() chan bool {
+	return defaultScheduler.Start()
+}
+
+func Remove(j interface{}) {
+	defaultScheduler.Remove(j)
+}
+
+func Scheduled(j interface{}) bool {
+	for _, job := range defaultScheduler.jobs {
+		if job.jobFunc == getFunctionName(j) {
+			return true
+		}
+	}
+	return false
+}
+
+func NextRun() (job *Job, time time.Time) {
+	return defaultScheduler.NextRun()
+}
