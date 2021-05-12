@@ -38,7 +38,7 @@ func (s *Scheduler) Jobs() []*Job {
 }
 
 func (s *Scheduler) getRunnableJobs() (runningJobs []*Job, n int) {
-	runnableJobs := make([]*Job, 0)
+	runnableJobs := make([]*Job, 100)
 	n = 0
 	sort.Sort(s)
 	for i := 0; i < s.size; i++ {
