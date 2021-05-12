@@ -15,11 +15,11 @@ func TestCron(t *testing.T) {
 		t.Error(err)
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	stop := cron.Start()
+	_ = cron.Start()
 	for {
 		select {
 		case <-ctx.Done():
-			close(stop)
+			return
 		}
 	}
 }
